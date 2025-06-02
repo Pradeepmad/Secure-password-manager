@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Password Manager</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --danger: #f72585;
+            --success: #4cc9f0;
+            --warning: #f8961e;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --card-shadow: 0 10px 20px rgba(0,0,0,0.1), 0 6px 6px rgba(0,0,0,0.1);
+            --card-shadow-hover: 0 14px 28px rgba(0,0,0,0.15), 0 10px 10px rgba(0,0,0,0.12);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Navigation */
+        nav {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 100;
+        }
+
+        nav h1 {
+            margin: 0;
+            padding-left: 20px;
+            font-weight: 600;
+            font-size: 1.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            margin: 0;
+            padding-right: 20px;
+            align-items: center;
+        }
+
+        nav ul li {
+            margin-left: 20px;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        nav ul li a:hover {
+            text-decoration: underline;
+            transform: translateY(-2px);
+        }
+
+        /* Profile Menu */
+        .profile-menu {
+            position: relative;
+        }
+
+        #profile-icon {
+            font-size: 24px;
+            background: rgba(255,255,255,0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        #profile-icon:hover {
+            transform: scale(1.1);
+            background: rgba(255,255,255,0.3);
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow-hover);
+            min-width: 200px;
+            z-index: 1000;
+            overflow: hidden;
+            transform-origin: top right;
+            transform: scale(0.95);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .dropdown-menu.show {
+            display: block;
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 12px 15px;
+            color: var(--dark);
+            text-decoration: none;
+            transition: var(--transition);
+            border-left: 3px solid transparent;
+        }
+
+        .dropdown-menu a:hover {
+            background: rgba(67, 97, 238, 0.1);
+            border-left: 3px solid var(--primary);
+            padding-left: 20px;
+        }
+
+        /* Pages */
+        .page {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            margin-top: 20px;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+
+        .page.active {
+            display: block;
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Profile Page */
+        .profile-details {
+            margin-bottom: 20px;
+        }
+
+        .profile-details p {
+            margin: 10px 0;
+            font-size: 1.1rem;
+        }
+
+        .profile-details strong {
+            display: inline-block;
+            width: 120px;
+            color: var(--primary);
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .profile-not-logged-in {
+            color: var(--danger);
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin: 20px 0;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+            outline: none;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: var(--transition);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(0,0,0,0.15);
+        }
+
+        button:hover::after {
+            opacity: 1;
+        }
+
+        button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, var(--danger) 0%, #f55d9b 100%);
+        }
+
+        .btn-delete:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-decrypt {
+            background: linear-gradient(135deg, var(--success) 0%, #4cc9f0 100%);
+            margin-right: 10px;
+        }
+
+        .btn-decrypt:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Back Button */
+        .btn-back {
+            background: linear-gradient(135deg, var(--gray) 0%, #868e96 100%);
+            margin-top: 20px;
+        }
+
+        .btn-back:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Eye Icon */
+        .eye-icon {
+            font-size: 18px;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-block;
+        }
+
+        .eye-icon:hover {
+            transform: scale(1.2);
+            color: var(--primary);
+        }
+
+        /* Decrypt Input */
+        .decrypt-input {
+            width: 150px;
+            padding: 8px 12px;
+            margin: 5px 5px 0 0;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .decrypt-input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        /* Password Strength */
+        .password-strength {
+            margin-top: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .strength-weak {
+            color: var(--danger);
+        }
+
+        .strength-medium {
+            color: var(--warning);
+        }
+
+        .strength-strong {
+            color: var(--success);
+        }
+
+        /* Strength Meter */
+        .strength-meter {
+            height: 5px;
+            background: #e9ecef;
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .strength-meter-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        tr:hover {
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+
+        /* Dashboard */
+        .dashboard-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        /* Alerts */
+        #alerts {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 350px;
+            width: 100%;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            box-shadow: var(--card-shadow);
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alert.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, var(--success) 0%, #4cc9f0 100%);
+        }
+
+        .alert-error {
+            background: linear-gradient(135deg, var(--danger) 0%, #f55d9b 100%);
+        }
+
+        .alert::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.5);
+        }
+
+        /* Instructions */
+        .instructions {
+            background-color: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 5px solid var(--primary);
+        }
+
+        .instructions h2 {
+            color: var(--primary);
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .feature-card {
+            flex: 1;
+            min-width: 250px;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            border-top: 4px solid var(--primary);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .feature-card h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .feature-card p {
+            color: var(--gray);
+        }
+
+        .usage-steps {
+            margin-top: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .usage-steps h3 {
+            color: var(--primary);
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .usage-steps ol {
+            padding-left: 20px;
+        }
+
+        .usage-steps li {
+            margin-bottom: 10px;
+            padding-left: 10px;
+        }
+
+        .security-notes {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #fff8e1;
+            border-left: 5px solid var(--warning);
+            border-radius: 0 8px 8px 0;
+        }
+
+        .security-notes h3 {
+            margin-top: 0;
+            color: var(--warning);
+        }
+
+        .security-notes ul {
+            padding-left: 20px;
+        }
+
+        .security-notes li {
+            margin-bottom: 8px;
+        }
+
+        /* Password Display */
+        .password-display {
+            font-family: monospace;
+            letter-spacing: 2px;
+        }
+
+        /* 3D Card Effect */
+        .card-3d {
+            perspective: 1000px;
+        }
+
+        .card-3d-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            position: relative;
+        }
+
+        .card-3d:hover .card-3d-inner {
+            transform: rotateY(10deg) rotateX(5deg);
+        }
+
+        /* Floating Animation */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+                padding: 15px;
+            }
+
+            nav h1 {
+                padding-left: 0;
+                margin-bottom: 15px;
+            }
+
+            nav ul {
+                padding-right: 0;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            .page {
+                padding: 20px;
+            }
+
+            .profile-actions, .dashboard-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .dropdown-menu {
+                position: static;
+                margin-top: 10px;
+                width: 100%;
+            }
+
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            .feature-card {
+                min-width: 100%;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Password Generator */
+        .password-generator {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .password-generator-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .password-generator-controls label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+
+        .generated-password {
+            margin-top: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            font-family: monospace;
+            text-align: center;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .generated-password:hover {
+            background: #e9ecef;
+        }
+
+        .copy-notification {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--dark);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .copy-notification.show {
+            opacity: 1;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+            color: var(--primary);
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--dark);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+            font-weight: normal;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <h1>🔒 Secure Vault</h1>
+        <ul>
+            <li class="profile-menu">
+                <span id="profile-icon" style="cursor: pointer;">👤</span>
+                <div id="profile-dropdown" class="dropdown-menu">
+                    <a id="nav-profile">Profile</a>
+                    <a id="nav-dashboard">Dashboard</a>
+                    <a id="nav-add-password">Add Password</a>
+                    <a id="nav-view-passwords">View Passwords</a>
+                    <a id="nav-logout">Logout</a>
+                </div>
+            </li>
+        </ul>
+    </nav>
+    
+    <div class="container">
+        <div id="alerts"></div>
+        
+        <!-- Profile Page -->
+        <div id="profile-page" class="page">
+            <h2>Your Profile</h2>
+            <div id="profile-details">
+                <p><strong>Email:</strong> <span id="profile-email"></span></p>
+                <p id="profile-not-logged-in" style="display: none;">You are not logged in.</p>
+            </div>
+            <div class="profile-actions">
+                <button id="profile-login" class="btn"><span>Login</span></button>
+                <button id="profile-register" class="btn"><span>Register</span></button>
+            </div>
+        </div>
+        
+        <!-- Login Page -->
+        <div id="login-page" class="page">
+            <h2>Welcome Back</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email:</label>
+                    <input type="email" id="login-email" required placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password:</label>
+                    <input type="password" id="login-password" required placeholder="Enter your password">
+                </div>
+                <button type="submit"><span>Login</span></button>
+            </form>
+            <p>Don't have an account? <a id="show-register" style="cursor: pointer; color: var(--primary);">Register here</a></p>
+            <button id="back-from-login" class="btn-back"><span>Back</span></button>
+        </div>
+        
+        <!-- Register Page -->
+        <div id="register-page" class="page">
+            <h2>Create Account</h2>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="register-email">Email:</label>
+                    <input type="email" id="register-email" required placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password:</label>
+                    <input type="password" id="register-password" required placeholder="Create a password">
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm-password">Confirm Password:</label>
+                    <input type="password" id="register-confirm-password" required placeholder="Confirm your password">
+                </div>
+                <button type="submit"><span>Register</span></button>
+            </form>
+            <p>Already have an account? <a id="show-login" style="cursor: pointer; color: var(--primary);">Login here</a></p>
+            <button id="back-from-register" class="btn-back"><span>Back</span></button>
+        </div>
+        
+        <!-- Setup Master Password Page -->
+        <div id="setup-master-page" class="page">
+            <h2>Set Up Master Password</h2>
+            <p>Your master password must contain:</p>
+            <ul>
+                <li>At least 8 characters</li>
+                <li>At least one uppercase letter</li>
+                <li>At least one number</li>
+                <li>At least one special character</li>
+            </ul>
+            
+            <form id="setup-master-form">
+                <div class="form-group">
+                    <label for="master-password">Master Password:</label>
+                    <input type="password" id="master-password" required placeholder="Enter your master password">
+                    <div id="master-strength" class="password-strength"></div>
+                    <div class="strength-meter">
+                        <div id="master-strength-meter" class="strength-meter-fill"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="confirm-master">Confirm Master Password:</label>
+                    <input type="password" id="confirm-master" required placeholder="Confirm your master password">
+                </div>
+                <button type="submit"><span>Set Master Password</span></button>
+            </form>
+            <button id="back-from-master" class="btn-back"><span>Back</span></button>
+        </div>
+        
+        <!-- Dashboard Page -->
+        <div id="dashboard-page" class="page">
+            <h2>Welcome, <span id="user-email"></span></h2>
+            
+            <div class="instructions card-3d">
+                <div class="card-3d-inner">
+                    <h2>About Secure Vault</h2>
+                    <p>Your personal vault for secure password storage with military-grade encryption.</p>
+                    
+                    <div class="features">
+                        <div class="feature-card floating">
+                            <h3>🔐 Secure Storage</h3>
+                            <p>All passwords encrypted with AES-256 before storage</p>
+                        </div>
+                        <div class="feature-card floating" style="animation-delay: 0.2s;">
+                            <h3>🔑 One Master Key</h3>
+                            <p>Only you can decrypt with your master password</p>
+                        </div>
+                        <div class="feature-card floating" style="animation-delay: 0.4s;">
+                            <h3>🌐 Client-Side Only</h3>
+                            <p>Your data never leaves your browser</p>
+                        </div>
+                    </div>
+
+                    <div class="usage-steps">
+                        <h3>How to Use This Password Manager</h3>
+                        <ol>
+                            <li><strong>Register</strong> with your email and a strong password</li>
+                            <li><strong>Set up</strong> your master password (this will be used to encrypt all your stored passwords)</li>
+                            <li><strong>Add passwords</strong> for your various accounts and services</li>
+                            <li><strong>View/Decrypt</strong> passwords when needed by entering your master password</li>
+                            <li><strong>Manage</strong> your passwords through the intuitive interface</li>
+                        </ol>
+                    </div>
+
+                    <div class="security-notes">
+                        <h3>Important Security Notes</h3>
+                        <ul>
+                            <li>Your master password is never stored - only a hash is kept</li>
+                            <li>All passwords are encrypted before storage</li>
+                            <li>Without the master password, encrypted data is useless</li>
+                            <li>All encryption/decryption happens in your browser</li>
+                            <li>Never share your master password with anyone</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-actions">
+                <button id="go-add-password" class="btn"><span>Add New Password</span></button>
+                <button id="go-view-passwords" class="btn"><span>View Saved Passwords</span></button>
+            </div>
+            <button id="back-from-dashboard" class="btn-back"><span>Back</span></button>
+        </div>
+        
+        <!-- Add Password Page -->
+        <div id="add-password-page" class="page">
+            <h2>Add New Password</h2>
+            <form id="add-password-form">
+                <div class="form-group">
+                    <label for="service-name">Service Name:</label>
+                    <input type="text" id="service-name" required placeholder="e.g., Google, Facebook">
+                </div>
+                <div class="form-group">
+                    <label for="username">Username/Email:</label>
+                    <input type="text" id="username" required placeholder="Enter your username or email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" required placeholder="Enter the password">
+                    <div class="password-generator">
+                        <button type="button" id="generate-password" class="btn" style="width: auto; padding: 8px 15px; margin-top: 10px;">
+                            <span>Generate Strong Password</span>
+                        </button>
+                        <div class="password-generator-controls" id="password-options" style="display: none;">
+                            <label>
+                                <input type="checkbox" id="include-uppercase" checked> Uppercase
+                            </label>
+                            <label>
+                                <input type="checkbox" id="include-lowercase" checked> Lowercase
+                            </label>
+                            <label>
+                                <input type="checkbox" id="include-numbers" checked> Numbers
+                            </label>
+                            <label>
+                                <input type="checkbox" id="include-symbols" checked> Symbols
+                            </label>
+                            <label>
+                                Length: <input type="number" id="password-length" min="8" max="32" value="12" style="width: 50px;">
+                            </label>
+                        </div>
+                        <div class="generated-password" id="generated-password" style="display: none;">
+                            <span id="generated-password-text"></span>
+                            <div class="copy-notification" id="copy-notification">Copied!</div>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit"><span>Save Password</span></button>
+            </form>
+            <button id="back-from-add-password" class="btn-back"><span>Back</span></button>
+        </div>
+        
+        <!-- View Passwords Page -->
+        <div id="view-passwords-page" class="page">
+            <h2>Your Saved Passwords</h2>
+            
+            <div id="decrypted-password-container" class="decrypted-password" style="display: none;">
+                <div><strong>Service:</strong> <span id="decrypted-service"></span></div>
+                <div><strong>Username:</strong> <span id="decrypted-username"></span></div>
+                <div><strong>Password:</strong> <span id="decrypted-password" class="password-display">********</span> 
+                    <span id="toggle-decrypted-password" class="eye-icon tooltip">
+                        👁️
+                        <span class="tooltiptext">Click to show/hide password</span>
+                    </span>
+                </div>
+                <button id="delete-decrypted" class="btn-delete"><span>Delete</span></button>
+            </div>
+            
+            <table id="passwords-table">
+                <thead>
+                    <tr>
+                        <th>Service Name</th>
+                        <th>Username</th>
+                        <th>Password</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="passwords-tbody">
+                    <!-- Passwords will be inserted here by JavaScript -->
+                </tbody>
+            </table>
+            
+            <div id="no-passwords-message" class="empty-state">
+                <i>🔒</i>
+                <h3>No Passwords Saved Yet</h3>
+                <p>You haven't saved any passwords yet. Add your first password to get started!</p>
+                <button id="go-add-password-from-view" class="btn" style="margin-top: 20px;"><span>Add New Password</span></button>
+            </div>
+            
+            <button id="back-from-view-passwords" class="btn-back"><span>Back</span></button>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let currentUser = null;
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        let passwords = JSON.parse(localStorage.getItem('passwords')) || [];
+        let navigationHistory = []; // Track navigation history
+        let currentlyDecryptedId = null; // Track which password is currently decrypted
+
+        // DOM Elements
+        const dom = {
+            // Navigation
+            navProfile: document.getElementById('nav-profile'),
+            navDashboard: document.getElementById('nav-dashboard'),
+            navAddPassword: document.getElementById('nav-add-password'),
+            navViewPasswords: document.getElementById('nav-view-passwords'),
+            navLogout: document.getElementById('nav-logout'),
+            profileIcon: document.getElementById('profile-icon'),
+            profileDropdown: document.getElementById('profile-dropdown'),
+            
+            // Pages
+            profilePage: document.getElementById('profile-page'),
+            loginPage: document.getElementById('login-page'),
+            registerPage: document.getElementById('register-page'),
+            setupMasterPage: document.getElementById('setup-master-page'),
+            dashboardPage: document.getElementById('dashboard-page'),
+            addPasswordPage: document.getElementById('add-password-page'),
+            viewPasswordsPage: document.getElementById('view-passwords-page'),
+            
+            // Forms
+            loginForm: document.getElementById('login-form'),
+            registerForm: document.getElementById('register-form'),
+            setupMasterForm: document.getElementById('setup-master-form'),
+            addPasswordForm: document.getElementById('add-password-form'),
+            
+            // Inputs
+            loginEmail: document.getElementById('login-email'),
+            loginPassword: document.getElementById('login-password'),
+            registerEmail: document.getElementById('register-email'),
+            registerPassword: document.getElementById('register-password'),
+            registerConfirmPassword: document.getElementById('register-confirm-password'),
+            masterPassword: document.getElementById('master-password'),
+            confirmMaster: document.getElementById('confirm-master'),
+            masterStrength: document.getElementById('master-strength'),
+            masterStrengthMeter: document.getElementById('master-strength-meter'),
+            serviceName: document.getElementById('service-name'),
+            username: document.getElementById('username'),
+            password: document.getElementById('password'),
+            
+            // Password generator
+            generatePassword: document.getElementById('generate-password'),
+            passwordOptions: document.getElementById('password-options'),
+            generatedPassword: document.getElementById('generated-password'),
+            generatedPasswordText: document.getElementById('generated-password-text'),
+            copyNotification: document.getElementById('copy-notification'),
+            includeUppercase: document.getElementById('include-uppercase'),
+            includeLowercase: document.getElementById('include-lowercase'),
+            includeNumbers: document.getElementById('include-numbers'),
+            includeSymbols: document.getElementById('include-symbols'),
+            passwordLength: document.getElementById('password-length'),
+            
+            // Other elements
+            userEmail: document.getElementById('user-email'),
+            profileEmail: document.getElementById('profile-email'),
+            profileNotLoggedIn: document.getElementById('profile-not-logged-in'),
+            profileLogin: document.getElementById('profile-login'),
+            profileRegister: document.getElementById('profile-register'),
+            passwordsTbody: document.getElementById('passwords-tbody'),
+            noPasswordsMessage: document.getElementById('no-passwords-message'),
+            alerts: document.getElementById('alerts'),
+            showRegister: document.getElementById('show-register'),
+            showLogin: document.getElementById('show-login'),
+            goAddPassword: document.getElementById('go-add-password'),
+            goViewPasswords: document.getElementById('go-view-passwords'),
+            goAddPasswordFromView: document.getElementById('go-add-password-from-view'),
+            backFromLogin: document.getElementById('back-from-login'),
+            backFromRegister: document.getElementById('back-from-register'),
+            backFromMaster: document.getElementById('back-from-master'),
+            backFromDashboard: document.getElementById('back-from-dashboard'),
+            backFromAddPassword: document.getElementById('back-from-add-password'),
+            backFromViewPasswords: document.getElementById('back-from-view-passwords'),
+            
+            // Decrypted password display
+            decryptedContainer: document.getElementById('decrypted-password-container'),
+            decryptedService: document.getElementById('decrypted-service'),
+            decryptedUsername: document.getElementById('decrypted-username'),
+            decryptedPassword: document.getElementById('decrypted-password'),
+            toggleDecryptedPassword: document.getElementById('toggle-decrypted-password'),
+            deleteDecrypted: document.getElementById('delete-decrypted')
+        };
+
+        // Initialize the app
+        function init() {
+            setupEventListeners();
+            showPage('profile-page');
+            updateNav();
+        }
+
+        function setupEventListeners() {
+            // Navigation
+            dom.navProfile.addEventListener('click', () => {
+                showPage('profile-page');
+                toggleDropdown(false);
+            });
+            dom.navDashboard.addEventListener('click', () => {
+                showPage('dashboard-page');
+                toggleDropdown(false);
+            });
+            dom.navAddPassword.addEventListener('click', () => {
+                showPage('add-password-page');
+                toggleDropdown(false);
+            });
+            dom.navViewPasswords.addEventListener('click', () => {
+                showPage('view-passwords-page');
+                toggleDropdown(false);
+            });
+            dom.navLogout.addEventListener('click', () => {
+                handleLogout();
+                toggleDropdown(false);
+            });
+            dom.profileIcon.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleDropdown();
+            });
+            
+            // Form submissions
+            dom.loginForm.addEventListener('submit', handleLogin);
+            dom.registerForm.addEventListener('submit', handleRegister);
+            dom.setupMasterForm.addEventListener('submit', handleMasterPasswordSetup);
+            dom.addPasswordForm.addEventListener('submit', handleAddPassword);
+            
+            // Profile page buttons
+            dom.profileLogin.addEventListener('click', () => showPage('login-page'));
+            dom.profileRegister.addEventListener('click', () => showPage('register-page'));
+            
+            // Links
+            dom.showRegister.addEventListener('click', () => showPage('register-page'));
+            dom.showLogin.addEventListener('click', () => showPage('login-page'));
+            
+            // Buttons
+            dom.goAddPassword.addEventListener('click', () => showPage('add-password-page'));
+            dom.goViewPasswords.addEventListener('click', () => showPage('view-passwords-page'));
+            dom.goAddPasswordFromView.addEventListener('click', () => showPage('add-password-page'));
+            
+            // Back buttons
+            dom.backFromLogin.addEventListener('click', goBack);
+            dom.backFromRegister.addEventListener('click', goBack);
+            dom.backFromMaster.addEventListener('click', goBack);
+            dom.backFromDashboard.addEventListener('click', goBack);
+            dom.backFromAddPassword.addEventListener('click', goBack);
+            dom.backFromViewPasswords.addEventListener('click', goBack);
+            
+            // Password strength check
+            dom.masterPassword.addEventListener('input', checkPasswordStrength);
+            
+            // Password generator
+            dom.generatePassword.addEventListener('click', togglePasswordGenerator);
+            dom.generatedPassword.addEventListener('click', copyGeneratedPassword);
+            
+            // Decrypted password toggle
+            dom.toggleDecryptedPassword.addEventListener('click', toggleDecryptedPasswordDisplay);
+            dom.deleteDecrypted.addEventListener('click', handleDeleteDecrypted);
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!dom.profileIcon.contains(e.target) && !dom.profileDropdown.contains(e.target)) {
+                    toggleDropdown(false);
+                }
+            });
+        }
+
+        // Page management
+        function showPage(pageId) {
+            // Push the current page to history before switching, unless it's the same page
+            const currentPage = document.querySelector('.page.active')?.id;
+            if (currentPage && currentPage !== pageId && pageId !== 'profile-page') {
+                navigationHistory.push(currentPage);
+            }
+            
+            // Hide all pages and show the requested one
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            const newPage = document.getElementById(pageId);
+            if (newPage) {
+                newPage.classList.add('active');
+            }
+            
+            if (pageId === 'dashboard-page') {
+                dom.userEmail.textContent = currentUser ? currentUser.email : '';
+            } else if (pageId === 'view-passwords-page') {
+                loadPasswords();
+            } else if (pageId === 'profile-page') {
+                if (currentUser) {
+                    dom.profileEmail.textContent = currentUser.email;
+                    dom.profileNotLoggedIn.style.display = 'none';
+                    dom.profileLogin.style.display = 'none';
+                    dom.profileRegister.style.display = 'none';
+                } else {
+                    dom.profileEmail.textContent = '';
+                    dom.profileNotLoggedIn.style.display = 'block';
+                    dom.profileLogin.style.display = 'inline-block';
+                    dom.profileRegister.style.display = 'inline-block';
+                }
+            }
+            
+            updateNav();
+        }
+
+        function goBack() {
+            // Pop the last page from history and navigate to it
+            const previousPage = navigationHistory.pop();
+            if (previousPage) {
+                showPage(previousPage);
+            } else {
+                // Default to profile-page if no history
+                showPage('profile-page');
+            }
+        }
+
+        function updateNav() {
+            const isLoggedIn = currentUser !== null;
+            
+            dom.profileIcon.style.display = 'block';
+            
+            dom.navProfile.style.display = 'block';
+            dom.navDashboard.style.display = isLoggedIn ? 'block' : 'none';
+            dom.navAddPassword.style.display = isLoggedIn ? 'block' : 'none';
+            dom.navViewPasswords.style.display = isLoggedIn ? 'block' : 'none';
+            dom.navLogout.style.display = isLoggedIn ? 'block' : 'none';
+        }
+
+        function toggleDropdown(show) {
+            if (show === undefined) {
+                dom.profileDropdown.classList.toggle('show');
+            } else {
+                if (show) {
+                    dom.profileDropdown.classList.add('show');
+                } else {
+                    dom.profileDropdown.classList.remove('show');
+                }
+            }
+        }
+
+        // Auth functions
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = dom.loginEmail.value;
+            const password = dom.loginPassword.value;
+            
+            try {
+                const hashedPassword = await hashPassword(password);
+                users = JSON.parse(localStorage.getItem('users')) || [];
+                const user = users.find(u => u.email === email && u.password === hashedPassword);
+                
+                if (user) {
+                    currentUser = { ...user };
+                    showAlert('Login successful!', 'success');
+                    
+                    if (user.hasMasterPassword) {
+                        showPage('dashboard-page');
+                    } else {
+                        showPage('setup-master-page');
+                    }
+                } else {
+                    showAlert('Invalid email or password', 'error');
+                }
+            } catch (error) {
+                showAlert('Login failed. Please try again.', 'error');
+                console.error('Login error:', error);
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const email = dom.registerEmail.value;
+            const password = dom.registerPassword.value;
+            const confirmPassword = dom.registerConfirmPassword.value;
+            
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match', 'error');
+                return;
+            }
+            
+            if (users.some(u => u.email === email)) {
+                showAlert('Email already registered', 'error');
+                return;
+            }
+            
+            try {
+                const hashedPassword = await hashPassword(password);
+                const newUser = {
+                    id: Date.now(),
+                    email,
+                    password: hashedPassword,
+                    hasMasterPassword: false
+                };
+                
+                users.push(newUser);
+                localStorage.setItem('users', JSON.stringify(users));
+                currentUser = { ...newUser };
+                
+                showAlert('Registration successful!', 'success');
+                showPage('setup-master-page');
+            } catch (error) {
+                showAlert('Registration failed. Please try again.', 'error');
+                console.error('Registration error:', error);
+            }
+        }
+
+        async function handleMasterPasswordSetup(e) {
+            e.preventDefault();
+            const masterPassword = dom.masterPassword.value;
+            const confirmMaster = dom.confirmMaster.value;
+            
+            if (masterPassword !== confirmMaster) {
+                showAlert('Master passwords do not match', 'error');
+                return;
+            }
+            
+            if (!isStrongPassword(masterPassword)) {
+                showAlert('Master password does not meet requirements', 'error');
+                return;
+            }
+            
+            try {
+                const masterPasswordHash = await hashPassword(masterPassword);
+                currentUser.masterPasswordHash = masterPasswordHash;
+                currentUser.hasMasterPassword = true;
+                
+                users = users.map(u => u.id === currentUser.id ? { ...currentUser } : u);
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                showAlert('Master password set successfully!', 'success');
+                showPage('dashboard-page');
+            } catch (error) {
+                showAlert('Failed to set master password', 'error');
+                console.error('Master password setup error:', error);
+            }
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            navigationHistory = []; // Clear history on logout
+            showAlert('Logged out successfully', 'success');
+            showPage('profile-page');
+            clearForms();
+            hideDecryptedPassword();
+        }
+
+        // Password management
+        async function handleAddPassword(e) {
+            e.preventDefault();
+            const service = dom.serviceName.value;
+            const username = dom.username.value;
+            const password = dom.password.value;
+            
+            if (!service || !username || !password) {
+                showAlert('Please fill in all fields', 'error');
+                return;
+            }
+            
+            try {
+                const encryptedPassword = await encryptPassword(password, currentUser.masterPasswordHash);
+                
+                const newPassword = {
+                    id: Date.now(),
+                    userId: currentUser.id,
+                    service,
+                    username,
+                    password: encryptedPassword,
+                    createdAt: new Date().toISOString()
+                };
+                
+                passwords.push(newPassword);
+                localStorage.setItem('passwords', JSON.stringify(passwords));
+                
+                showAlert('Password saved successfully!', 'success');
+                dom.addPasswordForm.reset();
+                showPage('view-passwords-page');
+            } catch (error) {
+                showAlert('Failed to save password', 'error');
+                console.error('Password save error:', error);
+            }
+        }
+
+        function loadPasswords() {
+            const userPasswords = passwords.filter(p => p.userId === currentUser.id);
+            
+            if (userPasswords.length === 0) {
+                dom.noPasswordsMessage.style.display = 'block';
+                dom.passwordsTbody.innerHTML = '';
+                return;
+            }
+            
+            dom.noPasswordsMessage.style.display = 'none';
+            
+            let html = '';
+            userPasswords.forEach(pwd => {
+                html += `
+                    <tr data-id="${pwd.id}">
+                        <td>${pwd.service}</td>
+                        <td>${pwd.username}</td>
+                        <td>
+                            <span class="password-display" data-encrypted="${pwd.password}">********</span>
+                            <span class="eye-icon tooltip" data-id="${pwd.id}" style="cursor: pointer;">
+                                👁️
+                                <span class="tooltiptext">Click to show/hide password</span>
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn-decrypt" data-id="${pwd.id}"><span>Decrypt</span></button>
+                            <button class="btn-delete" data-id="${pwd.id}"><span>Delete</span></button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            dom.passwordsTbody.innerHTML = html;
+            
+            // Add event listeners to eye icons and buttons
+            document.querySelectorAll('.eye-icon').forEach(icon => {
+                icon.addEventListener('click', handleEyeIconClick);
+            });
+            
+            document.querySelectorAll('.btn-decrypt').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = parseInt(e.target.getAttribute('data-id'));
+                    showDecryptedPassword(id);
+                });
+            });
+            
+            document.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = parseInt(e.target.getAttribute('data-id'));
+                    deletePassword(id);
+                });
+            });
+        }
+
+        async function showDecryptedPassword(id) {
+            const passwordObj = passwords.find(p => p.id === id);
+            if (!passwordObj) {
+                showAlert('Password not found', 'error');
+                return;
+            }
+            
+            const masterPassword = prompt('Enter your master password to decrypt:');
+            if (!masterPassword) return;
+            
+            try {
+                const decryptedPassword = await decryptPassword(passwordObj.password, masterPassword);
+                
+                dom.decryptedService.textContent = passwordObj.service;
+                dom.decryptedUsername.textContent = passwordObj.username;
+                dom.decryptedPassword.textContent = '********';
+                dom.decryptedPassword.dataset.decrypted = decryptedPassword;
+                dom.decryptedContainer.dataset.id = passwordObj.id;
+                
+                dom.decryptedContainer.style.display = 'block';
+                currentlyDecryptedId = passwordObj.id;
+                
+                // Scroll to the decrypted container
+                dom.decryptedContainer.scrollIntoView({ behavior: 'smooth' });
+                
+                showAlert('Password decrypted successfully', 'success');
+            } catch (error) {
+                showAlert('Failed to decrypt password. Incorrect master password.', 'error');
+                console.error('Decryption error:', error);
+            }
+        }
+
+        function hideDecryptedPassword() {
+            dom.decryptedContainer.style.display = 'none';
+            currentlyDecryptedId = null;
+        }
+
+        function toggleDecryptedPasswordDisplay() {
+            const passwordDisplay = dom.decryptedPassword;
+            if (passwordDisplay.textContent === '********') {
+                passwordDisplay.textContent = passwordDisplay.dataset.decrypted;
+            } else {
+                passwordDisplay.textContent = '********';
+            }
+        }
+
+        async function handleDeleteDecrypted() {
+            const id = parseInt(dom.decryptedContainer.dataset.id);
+            if (id && confirm('Are you sure you want to delete this password?')) {
+                passwords = passwords.filter(p => p.id !== id);
+                localStorage.setItem('passwords', JSON.stringify(passwords));
+                loadPasswords();
+                hideDecryptedPassword();
+                showAlert('Password deleted', 'success');
+            }
+        }
+
+        async function handleEyeIconClick(e) {
+            const id = parseInt(e.target.getAttribute('data-id'));
+            const row = e.target.closest('tr');
+            const passwordDisplay = row.querySelector('.password-display');
+            
+            const passwordObj = passwords.find(p => p.id === id);
+            if (!passwordObj) {
+                showAlert('Password not found', 'error');
+                return;
+            }
+
+            if (passwordDisplay.dataset.decrypted) {
+                // Toggle between showing decrypted password and asterisks
+                passwordDisplay.textContent = passwordDisplay.textContent === '********' ? 
+                    passwordDisplay.dataset.decrypted : '********';
+            } else {
+                // Show encrypted password if not yet decrypted
+                passwordDisplay.textContent = passwordDisplay.textContent === '********' ? 
+                    passwordObj.password : '********';
+            }
+        }
+
+        function deletePassword(id) {
+            if (confirm('Are you sure you want to delete this password?')) {
+                passwords = passwords.filter(p => p.id !== id);
+                localStorage.setItem('passwords', JSON.stringify(passwords));
+                loadPasswords();
+                
+                if (currentlyDecryptedId === id) {
+                    hideDecryptedPassword();
+                }
+                
+                showAlert('Password deleted', 'success');
+            }
+        }
+
+        // Password generator
+        function togglePasswordGenerator() {
+            if (dom.passwordOptions.style.display === 'none' || !dom.passwordOptions.style.display) {
+                dom.passwordOptions.style.display = 'flex';
+                generateNewPassword();
+            } else {
+                dom.passwordOptions.style.display = 'none';
+                dom.generatedPassword.style.display = 'none';
+            }
+        }
+
+        function generateNewPassword() {
+            const length = parseInt(dom.passwordLength.value);
+            const uppercase = dom.includeUppercase.checked ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : '';
+            const lowercase = dom.includeLowercase.checked ? 'abcdefghijklmnopqrstuvwxyz' : '';
+            const numbers = dom.includeNumbers.checked ? '0123456789' : '';
+            const symbols = dom.includeSymbols.checked ? '!@#$%^&*()_+-=[]{}|;:,.<>?' : '';
+            
+            let charset = uppercase + lowercase + numbers + symbols;
+            
+            if (!charset) {
+                showAlert('Please select at least one character type', 'error');
+                return;
+            }
+            
+            let password = '';
+            for (let i = 0; i < length; i++) {
+                password += charset.charAt(Math.floor(Math.random() * charset.length));
+            }
+            
+            dom.generatedPasswordText.textContent = password;
+            dom.generatedPassword.style.display = 'block';
+        }
+
+        function copyGeneratedPassword() {
+            const password = dom.generatedPasswordText.textContent;
+            navigator.clipboard.writeText(password).then(() => {
+                dom.copyNotification.classList.add('show');
+                setTimeout(() => {
+                    dom.copyNotification.classList.remove('show');
+                }, 2000);
+            });
+        }
+
+        // Security functions
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function encryptPassword(password, masterPasswordHash) {
+            const encoder = new TextEncoder();
+            
+            const keyMaterial = await crypto.subtle.importKey(
+                'raw',
+                encoder.encode(masterPasswordHash),
+                { name: 'PBKDF2' },
+                false,
+                ['deriveKey']
+            );
+            
+            const salt = window.crypto.getRandomValues(new Uint8Array(16));
+            const key = await crypto.subtle.deriveKey(
+                {
+                    name: 'PBKDF2',
+                    salt: salt,
+                    iterations: 100000,
+                    hash: 'SHA-256'
+                },
+                keyMaterial,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['encrypt', 'decrypt']
+            );
+            
+            const iv = window.crypto.getRandomValues(new Uint8Array(12));
+            const encrypted = await crypto.subtle.encrypt(
+                {
+                    name: 'AES-GCM',
+                    iv: iv
+                },
+                key,
+                encoder.encode(password)
+            );
+            
+            const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+            combined.set(salt, 0);
+            combined.set(iv, salt.length);
+            combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+            
+            return btoa(String.fromCharCode.apply(null, combined));
+        }
+
+        async function decryptPassword(encrypted, masterPassword) {
+            try {
+                const hashedMasterPassword = await hashPassword(masterPassword);
+                
+                const decoder = new TextDecoder();
+                const encryptedData = Uint8Array.from(atob(encrypted), c => c.charCodeAt(0));
+                
+                const salt = encryptedData.slice(0, 16);
+                const iv = encryptedData.slice(16, 28);
+                const ciphertext = encryptedData.slice(28);
+                
+                const encoder = new TextEncoder();
+                const keyMaterial = await crypto.subtle.importKey(
+                    'raw',
+                    encoder.encode(hashedMasterPassword),
+                    { name: 'PBKDF2' },
+                    false,
+                    ['deriveKey']
+                );
+                
+                const key = await crypto.subtle.deriveKey(
+                    {
+                        name: 'PBKDF2',
+                        salt: salt,
+                        iterations: 100000,
+                        hash: 'SHA-256'
+                    },
+                    keyMaterial,
+                    { name: 'AES-GCM', length: 256 },
+                    false,
+                    ['decrypt']
+                );
+                
+                const decrypted = await crypto.subtle.decrypt(
+                    {
+                        name: 'AES-GCM',
+                        iv: iv
+                    },
+                    key,
+                    ciphertext
+                );
+                
+                return decoder.decode(decrypted);
+            } catch (error) {
+                console.error('Decryption failed:', error);
+                throw new Error('Decryption failed - wrong master password?');
+            }
+        }
+
+        // Password strength
+        function checkPasswordStrength() {
+            const password = dom.masterPassword.value;
+            let strength = 0;
+            
+            if (password.length >= 8) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            
+            let strengthText = 'None';
+            let strengthClass = '';
+            let meterWidth = '0%';
+            
+            if (password.length === 0) {
+                strengthText = 'None';
+                meterWidth = '0%';
+            } else if (strength <= 2) {
+                strengthText = 'Weak';
+                strengthClass = 'strength-weak';
+                meterWidth = '30%';
+            } else if (strength === 3) {
+                strengthText = 'Medium';
+                strengthClass = 'strength-medium';
+                meterWidth = '60%';
+            } else {
+                strengthText = 'Strong';
+                strengthClass = 'strength-strong';
+                meterWidth = '100%';
+            }
+            
+            dom.masterStrength.textContent = strengthText;
+            dom.masterStrength.className = 'password-strength ' + strengthClass;
+            dom.masterStrengthMeter.style.width = meterWidth;
+            dom.masterStrengthMeter.style.backgroundColor = strengthClass.split('-')[1];
+        }
+
+        function isStrongPassword(password) {
+            return password.length >= 8 &&
+                   /[A-Z]/.test(password) &&
+                   /[a-z]/.test(password) &&
+                   /[0-9]/.test(password) &&
+                   /[^A-Za-z0-9]/.test(password);
+        }
+
+        // UI helpers
+        function showAlert(message, type) {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            dom.alerts.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.classList.add('show');
+            }, 10);
+            
+            setTimeout(() => {
+                alert.classList.remove('show');
+                setTimeout(() => {
+                    alert.remove();
+                }, 300);
+            }, 5000);
+        }
+
+        function clearForms() {
+            dom.loginForm.reset();
+            dom.registerForm.reset();
+            dom.setupMasterForm.reset();
+            dom.addPasswordForm.reset();
+            dom.passwordOptions.style.display = 'none';
+            dom.generatedPassword.style.display = 'none';
+        }
+
+        // Initialize the app
+        window.addEventListener('DOMContentLoaded', init);
+
+        // Setup password generator event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Listen for changes in password generator options
+            dom.includeUppercase.addEventListener('change', generateNewPassword);
+            dom.includeLowercase.addEventListener('change', generateNewPassword);
+            dom.includeNumbers.addEventListener('change', generateNewPassword);
+            dom.includeSymbols.addEventListener('change', generateNewPassword);
+            dom.passwordLength.addEventListener('change', generateNewPassword);
+            
+            // Insert generated password into form
+            dom.generatedPassword.addEventListener('click', () => {
+                dom.password.value = dom.generatedPasswordText.textContent;
+                dom.password.type = 'text'; // Show the password
+                setTimeout(() => {
+                    dom.password.type = 'password'; // Hide it after 3 seconds
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html>
